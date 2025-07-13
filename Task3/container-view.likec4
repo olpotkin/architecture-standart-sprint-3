@@ -1,0 +1,110 @@
+specification {
+  element actor
+  element system
+  element component
+}
+
+model {
+  client = actor 'Клиент' {
+    style {
+      shape person
+    }
+  }
+
+  website = system 'Website' {
+    website_fe = component 'Website FE' {
+      description '[React]'
+    }
+    website_be = component 'Website BE' {
+      description '[PHP, Laravel]'
+    }
+
+    website_fe -> website_be 'REST'
+  }
+
+  internet_bank = system 'Интернет-банк' {
+    ib_ui = component 'Интернет-банк UI' {
+      description '(Razor, JS]'
+    }
+    ib_server = component 'Интернет-банк Server' {
+      description '[.NET 4.5]'
+    }
+
+    ib_ui -> ib_server 'SOAP'
+  }
+
+  api_gw = component 'API-Gateway / MQ Broker' {
+    description '[Kong, RabbitMQ]'
+  }
+
+  call_c_platform = component 'Call-center Platform' {
+    description '[Java micro-services]'
+  }
+
+  deposit_microservices = system 'Микросервисы депозитов' {
+    depo_gw = component 'Deposit Gateway' {
+      description '[REST facade, saga]'
+    }
+    otp = component 'OTP Service' {
+      description '[HSM, Redis]'
+    }
+    rate_s = component 'Rate Service' {
+      description '[Cache, Rate Calculations]'
+    }
+
+    depo_gw -> rate_s 'gRPC'
+  }
+
+
+  sms_gw = system 'SMS-шлюз' {
+    description '[HTTP-SMPP]'
+  }
+
+  abs = system 'АБС' {
+    description 'MS SQL Server'
+  }
+
+
+  // Relationships on the Context view
+  client -> ib_ui '[HTTPS]'
+  client -> website_fe '[HTTPS]'
+
+  website_be -> api_gw '[POST] /leads'
+  ib_server -> api_gw '[POST] /deposit-app, [GET] /rates'
+
+  api_gw -> call_c_platform '[AMQP] event'
+  
+  api_gw -> depo_gw '[REST, AMOP]'
+
+  depo_gw -> sms_gw 'REST SMS'
+  otp -> sms_gw 'REST OTP'
+  depo_gw -> abs 'SQL (write)'
+  rate_s -> abs 'SQL (read)'
+}
+
+views {
+
+  view index {
+    title 'Container view'
+    include *
+  }
+  
+  view of website {
+    title 'website system view'
+
+    include *
+  }
+
+  view of internet_bank {
+    title 'website system view'
+
+    include *
+  }
+
+  view of deposit_microservices {
+    title 'Deposit system view'
+
+    include *
+  }
+
+}
