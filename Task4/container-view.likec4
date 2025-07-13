@@ -1,0 +1,71 @@
+specification {
+  element actor
+  element system
+  element component
+}
+
+model {
+  rate_service = system 'Rate Service' {
+  }
+
+  rate_distr_sys = system 'Rate Distribution Serviceite' {
+    amqp_listener = component 'AMQP Listener' {
+      description 'Слушает RabbitMQ событие RateChanged'
+    }
+    csv_gen = component 'CSV Generator' {
+      description 'Формирует CSV-файл'
+    }
+    int_push_adapter = component 'Internal Push Adapter' {
+      description '[PUT] /rates во внутренний Call-центр'
+    }
+    sftp_up = component 'SFTP Uploader' {
+      description 'SSH-ключ, atomic rename, retry'
+    }
+    db = component 'Audit DataBase' {
+      description 'Хранит журнал отправок'
+    }
+
+    amqp_listener -> int_push_adapter 'queue'
+    amqp_listener -> csv_gen 'queue'
+    int_push_adapter -> db 'status'
+    sftp_up -> db 'status'
+    csv_gen -> sftp_up 'CSV-файл'
+
+  }
+
+  int_cc = system 'Платформа внутреннего Call-центра' {
+  }
+
+  sftp_ext = system 'SFTP-сервер партнёра' {
+  }
+
+
+  // Relationships on the Context view
+  rate_service -> amqp_listener 'AMQP'
+  int_push_adapter -> int_cc '[HTTPS, PUT] /rates'
+  sftp_up -> sftp_ext 'SFTP'
+
+}
+
+views {
+
+  view index {
+    title 'Container view'
+    include *
+
+    style sftp_ext {
+      color muted
+    }
+  }
+  
+  view of rate_distr_sys {
+    title 'Rate Distribution Service view'
+
+    include *
+
+    style sftp_ext {
+      color muted
+    }
+  }
+
+}
