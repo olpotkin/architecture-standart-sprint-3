@@ -1,0 +1,77 @@
+specification {
+  element actor
+  element system
+  element component
+}
+
+model {
+  client = actor 'Клиент' {
+    style {
+      shape person
+    }
+  }
+
+  operator = actor 'Оператор call-центра' {
+    style {
+      shape person
+    }
+  }
+
+  website = system 'Website' {
+    description '[PHP, React]'
+  }
+
+  internet_bank = system 'Интернет-банк' {
+    description '[ASP.NET MVC 4.5]'
+  }
+
+  api_gw = system 'Integration Bus / API-Gateway' {
+    description '[REST, MQ]'
+  }
+
+  deposit_microservices = system 'Микросервисы депозитов' {
+    description '[Java, Spring Boot]'
+  }
+
+  call_c_platform = system 'Call-center Platform' {
+    description '[Java micro-services]'
+  }
+
+  sms_gw = system 'SMS-шлюз' {
+    description 'External System'
+  }
+
+  abs = system 'АБС' {
+    description 'External System'
+  }
+
+
+  // Relationships on the Context view
+  client -> website '[HTTPS]'
+  client -> internet_bank 'HTTPS'
+  website -> api_gw '[REST] NewLead'
+  internet_bank -> api_gw '[REST] Deposit Application Rate'
+  api_gw -> deposit_microservices '[REST, MQ]'
+  api_gw -> call_c_platform '[MQ] Event'
+  operator -> call_c_platform 'Web UI'
+  deposit_microservices -> sms_gw '[REST] OTP, SMS'
+  deposit_microservices -> abs 'JDBC / PL-SQL'
+}
+
+views {
+
+  view index {
+    title 'Context view'
+
+    include *
+
+    style sms_gw {
+      color muted
+    }
+
+    style abs {
+      color muted
+    }
+  }
+
+}

@@ -1,0 +1,75 @@
+specification {
+  element actor
+  element system
+  element component
+}
+
+model {
+  back_office = actor 'Back-office депозитов' {
+    style {
+      shape person
+    }
+  }
+
+  operator_int = actor 'Оператор внутреннего call-центра' {
+    style {
+      shape person
+    }
+  }
+
+  operator_ext = actor 'Оператор партнерского call-центра' {
+    style {
+      shape person
+    }
+  }
+
+  abs = system 'АБС' {
+    description '[Oracle, PL/SQL], External System'
+  }
+
+  rate_service = system 'Rate Service' {
+    description '[Java]'
+  }
+
+  rate_distrib_service = system 'Rate Distribution Service' {
+    description '[Spring Boot]'
+  }
+
+  int_cc = system 'Платформа внутреннего Call-центра' {
+    description '[Java, micro-services]'
+  }
+
+  sftp = system 'SFTP-сервер партнёра' {
+    description 'External'
+  }
+
+  ext_cc = system 'Платформа партнерского Call-центра' {
+    description 'External'
+  }
+
+
+  // Relationships on the Context view
+  back_office -> abs 'Сохраняет/меняет ставку'
+  abs -> rate_service 'DB-notify'
+  rate_service -> rate_distrib_service '[RabbitMQ, AMQP] RateChanged Event'
+  operator_int -> int_cc 'UI'
+  rate_distrib_service -> int_cc '[REST] /rates'
+  rate_distrib_service -> sftp 'CSV-файл'
+  sftp -> ext_cc 'Чтение CSV'
+  operator_ext -> ext_cc 'UI'
+}
+
+views {
+
+  view index {
+    title 'Context view'
+
+    include *
+
+    style abs, sftp, ext_cc {
+      color muted
+    }
+
+  }
+
+}
